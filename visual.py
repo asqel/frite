@@ -3,6 +3,11 @@ import math
 import shlex
 import shell
 
+import sys
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 screen_h = 0
 screen_w = 0
 
@@ -39,6 +44,10 @@ def fix_page_idx():
 	
 	page_len = get_page_len()
 	nb_pages = math.ceil(len(info.keys()) / page_len)
+	if nb_pages == 0:
+		page_idx = 0
+		page_sub_idx = 0
+		return 
 
 	if page_idx >= nb_pages:
 		page_idx = nb_pages - 1
@@ -74,6 +83,22 @@ def page_down():
 		page_idx += 1
 		page_sub_idx = 0
 
+def draw_box(text : str, stdscr):
+	lines = [
+		"╔" + "═" * len(text) + "╗",
+		"║" + text + "║",
+		"╚" + "═" * len(text) + "╝",
+	]
+
+	y = screen_h / 2 - 1
+	x = screen_w / 2 - (len(text) + 2) / 2
+	y = int(y)
+	x = int(x)
+	stdscr.addstr(y, x, lines[0])
+	stdscr.addstr(y + 1, x, lines[1])
+	stdscr.addstr(y + 2, x, lines[2])
+	stdscr.refresh()
+	stdscr.getch()
 
 def refresh(stdscr, help_info, page, focused):
 	stdscr.clear()
@@ -146,10 +171,11 @@ def on_key_normal(key: int, pages, stdscr):
 	elif key == ord('y'):
 		if stdscr.getch() == ord('y'):
 			shell.copy_to_clip(info[pages[page_idx][page_sub_idx]][2])
+			draw_box("Copied to Clipboard", stdscr)
 
-	while (pages[page_idx][page_sub_idx] is None):
+	
+	while (pages[page_idx][page_sub_idx] is None and page_sub_idx > 0):
 		page_sub_idx -= 1
-	page_sub_idx = max(page_sub_idx, 0)
 
 def exec_command():
 	global info
@@ -161,7 +187,7 @@ def exec_command():
 	if not argv:
 		return 
 
-	if argv[0] == ':n':
+	if argv[0] in (':n', ':na'):
 		# :n name [uname] [email] [extra]
 		if len(argv) < 2:
 		 	return 
@@ -172,7 +198,10 @@ def exec_command():
 		for i in range(2, min(5, len(argv))):
 			elements[i - 2] = argv[i]
 		elements[3] = elements[2]
-		elements[2] = shell.gen_passwd()
+		if argv[0] == ':na':
+			elements[2] = shell.gen_passwd()
+		else:
+			elements[2] = shell.gen_passwd_utf8()
 		info[key] = elements
 	if argv[0] == ':q':
 		raise KeyboardInterrupt
@@ -222,6 +251,12 @@ def main(stdscr):
 		"^C: to quit"
 
 	]
+	screen_h, screen_w = stdscr.getmaxyx()
+	screen_h -= 1
+	screen_w -= 1
+	fix_page_idx()
+	pages: list[list[str]] = build_pages()
+	refresh(stdscr, help_info, pages[page_idx], page_sub_idx)
 	while (1):
 		screen_h, screen_w = stdscr.getmaxyx()
 		screen_h -= 1

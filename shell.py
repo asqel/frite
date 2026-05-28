@@ -46,7 +46,8 @@ alphabet = "";
 for i in range(ord(' ') + 1, ord('~') + 1):
 	alphabet += chr(i);
 
-alphabet_utf8 = alphabet + "ΓΔΘΠΛΣΨ" + "Ω" + "δζλξπд£¥¤¦§±øùúûü" + "àáâãäåèéêëñ"
+alphabet_utf8 = alphabet + "ΓΔΘΠΛΣΨ" + "Ω" + "δζλξπд£¥¤¦§±øùúûü" + "àáâãäåèéêëñ" \
+	+ "𓅰𓅱" + "⇶ℂℍℕℝℙℚℤ"
 
 def gen_passwd():
 	passwd = "";
