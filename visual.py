@@ -100,7 +100,7 @@ def draw_box(text : str, stdscr):
 	stdscr.refresh()
 	stdscr.getch()
 
-def refresh(stdscr, help_info, page, focused):
+def refresh(stdscr, help_info, col_names, page, focused):
 	stdscr.clear()
 	if screen_h < 3 or screen_w < 20:
 		stdscr.addstr(0, 0, "at least 20x3 term")
@@ -112,7 +112,16 @@ def refresh(stdscr, help_info, page, focused):
 	for idx, text in enumerate(help_info):
 		stdscr.addstr(0, x, text)
 		x += len(text) + spaces
-	stdscr.addstr(1, 0, " " * screen_w, curses.A_REVERSE)
+	
+	col_size = screen_w // len(col_names)
+	header = ""
+	for i in col_names:
+		spaces = col_size - len(i)
+		left = spaces // 2
+		right = spaces - left
+		header += " " * left + i + " " * right
+	stdscr.addstr(1, 0, header, curses.A_REVERSE)
+
 	for idx, entry in enumerate(page):
 		y = 2 + idx
 		if y >= screen_h:
@@ -251,19 +260,21 @@ def main(stdscr):
 		"^C: to quit"
 
 	]
+	collumns = ["name", "username", "email", "info"]
+
 	screen_h, screen_w = stdscr.getmaxyx()
 	screen_h -= 1
 	screen_w -= 1
 	fix_page_idx()
 	pages: list[list[str]] = build_pages()
-	refresh(stdscr, help_info, pages[page_idx], page_sub_idx)
+	refresh(stdscr, help_info, collumns, pages[page_idx], page_sub_idx)
 	while (1):
 		screen_h, screen_w = stdscr.getmaxyx()
 		screen_h -= 1
 		screen_w -= 1
 		fix_page_idx()
 		pages: list[list[str]] = build_pages()
-		refresh(stdscr, help_info, pages[page_idx], page_sub_idx)
+		refresh(stdscr, help_info, collumns, pages[page_idx], page_sub_idx)
 
 		key = stdscr.getch()
 		if current_mod == MOD_NORMAL:
