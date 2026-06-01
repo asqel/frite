@@ -120,6 +120,7 @@ def refresh(stdscr, help_info, col_names, page, focused):
 		left = spaces // 2
 		right = spaces - left
 		header += " " * left + i + " " * right
+	header += " " * (screen_w - len(header))
 	stdscr.addstr(1, 0, header, curses.A_REVERSE)
 
 	for idx, entry in enumerate(page):
@@ -286,7 +287,10 @@ def main(stdscr):
 def start_visual(info_dict = {}):
 	global info
 	info = info_dict
-	curses.wrapper(main)
+	try:
+		curses.wrapper(main)
+	except KeyboardInterrupt:
+		print("exited")
 	info = {}
 		
 
